@@ -15,7 +15,7 @@ const Header: React.FC = () => {
     { href: '#destinations', label: 'Destinations' },
     { href: '#tribal-life', label: 'Tribal Life' },
     { href: '#hidden-gems', label: 'Hidden Gems' },
-    { href: '#ai-art', label: 'AI Painter' },
+    { href: '#folklore', label: 'Folklore AI' },
     { href: '#bus-finder', label: 'Bus Finder' },
     { href: '#weather', label: 'Weather' },
     { href: '#recommender', label: 'Itinerary AI' },

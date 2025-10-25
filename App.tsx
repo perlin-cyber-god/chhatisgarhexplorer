@@ -6,13 +6,13 @@ import TribalLifestyle from './components/TribalLifestyle';
 import ItineraryRecommender from './components/ItineraryRecommender';
 import Footer from './components/Footer';
 import BusFinder from './components/BusFinder';
-import AIArtPainter from './components/AIArtPainter';
 import InteractiveCalendar from './components/InteractiveCalendar';
 import DraggableStickyNote from './components/DraggableStickyNote';
 import AnimatedSection from './components/common/AnimatedSection';
 import HiddenGems from './components/HiddenGems';
 import Weather from './components/Weather';
 import Chatbot from './components/Chatbot';
+import FolkloreGenerator from './components/FolkloreGenerator';
 
 const App: React.FC = () => {
   return (
@@ -30,7 +30,7 @@ const App: React.FC = () => {
           <HiddenGems />
         </AnimatedSection>
         <AnimatedSection>
-          <AIArtPainter />
+          <FolkloreGenerator />
         </AnimatedSection>
         <AnimatedSection>
           <BusFinder />
