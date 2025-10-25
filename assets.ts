@@ -1,15 +1,18 @@
+// When you place images in the `public` folder, Vite makes them available at the root URL.
+// For example, an image at `public/images/hero-background.jpg` can be accessed in the code as `/images/hero-background.jpg`.
+
 export const IMAGES = {
-  heroBackground: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Chitrakote_Waterfalls_during_monsoon.jpg',
   destinations: {
-    chitrakote: 'https://picsum.photos/seed/chitrakote/800/600',
-    bastar: 'https://picsum.photos/seed/bastar/800/600',
-    kanger: 'https://picsum.photos/seed/kanger/800/600',
-    mainpat: 'https://picsum.photos/seed/mainpat/800/600',
+    chitrakote: '/images/destinations/destination-chitrakote-falls.jpg',
+    bastar: '/images/destinations/destination-bastar.jpg',
+    kanger: '/images/destinations/destination-kanger-valley.jpg',
+    mainpat: '/images/destinations/destination-mainpat.jpg',
   },
   tribal: {
-    dhokra: 'https://picsum.photos/seed/dhokra/800/600',
-    gond: 'https://picsum.photos/seed/gond/800/600',
-    dussehra: 'https://picsum.photos/seed/dussehra/800/600',
-    cuisine: 'https://picsum.photos/seed/cuisine/800/600',
+    dhokra: '/images/tribal/tribal-dhokra-art.jpg',
+    gond: '/images/tribal/tribal-gond-painting.jpg',
+    dussehra: '/images/tribal/tribal-bastar-dussehra.jpg',
+    cuisine: '/images/tribal/tribal-cuisine.jpg',
   },
+  heroBackground: '/images/hero-background.jpg',
 };
