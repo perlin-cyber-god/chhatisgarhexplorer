@@ -1,30 +1,37 @@
 import type { HiddenGem } from '../types';
 
+const API_BASE_URL = 'http://localhost:3001/api';
+
 /**
- * Fetches hidden gems from the database via a backend API.
- * 
- * NOTE FOR PROJECT SUBMISSION:
- * This function now makes a real network request to a backend API. 
- * Before this will work, you must create and run a simple backend server (e.g., Node.js/Express)
- * that connects to your MongoDB instance and exposes the data at the '/api/gems' endpoint.
- * 
- * This demonstrates the complete, secure architecture for a full-stack application.
+ * Fetches all hidden gems from the backend server.
  */
 export const fetchHiddenGems = async (): Promise<HiddenGem[]> => {
-  console.log("Fetching hidden gems from backend API...");
-
-  const API_URL = 'http://localhost:3001/api/gems'; // The URL of your running backend
-
-  try {
-    const response = await fetch(API_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Could not fetch hidden gems:", error);
-    // Provide a user-friendly error message
-    throw new Error("Failed to load hidden gems from the server. Please ensure the backend is running.");
+  console.log('Fetching hidden gems from backend API...');
+  const response = await fetch(`${API_BASE_URL}/gems`);
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
   }
+  return response.json();
+};
+
+/**
+ * Submits a new hidden gem to the backend server.
+ * @param gemData - The gem data to submit, excluding the MongoDB _id.
+ * @returns The newly created gem document, including the _id from the database.
+ */
+export const submitHiddenGem = async (gemData: Omit<HiddenGem, '_id'>): Promise<HiddenGem> => {
+  console.log('Submitting new gem to backend API...');
+  const response = await fetch(`${API_BASE_URL}/gems`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(gemData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to submit gem');
+  }
+  return response.json();
 };

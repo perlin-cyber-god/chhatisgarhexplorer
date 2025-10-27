@@ -23,7 +23,12 @@ const BusFinder: React.FC = () => {
     }
     setError('');
 
-    const redbusUrl = `https://www.redbus.in/search?fromCityName=${encodeURIComponent(fromCity)}&toCityName=${encodeURIComponent(toCity)}&srcCountry=IND&destCountry=IND`;
+    // Format cities for the URL (lowercase, spaces to hyphens)
+    const formattedFrom = fromCity.toLowerCase().replace(/\s+/g, '-');
+    const formattedTo = toCity.toLowerCase().replace(/\s+/g, '-');
+    
+    // Use the new, more reliable path-based URL structure
+    const redbusUrl = `https://www.redbus.in/bus-tickets/${formattedFrom}-to-${formattedTo}`;
 
     window.open(redbusUrl, '_blank', 'noopener,noreferrer');
   };
