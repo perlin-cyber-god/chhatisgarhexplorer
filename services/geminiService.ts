@@ -1,16 +1,15 @@
 // This file centralizes all interactions with the Google Gemini API.
-// FIX: Import `Chat` type for chat sessions.
 import { GoogleGenAI, Chat } from "@google/genai";
 import type { ItineraryParams } from '../types';
 
-// IMPORTANT: Vite uses `import.meta.env` to access environment variables.
+// CRITICAL FIX: Use Vite's method for accessing environment variables on the frontend.
 const apiKey = import.meta.env.VITE_API_KEY;
 if (!apiKey) {
-  throw new Error("VITE_API_KEY is not defined in the .env file");
+  throw new Error("VITE_API_KEY environment variable not set. Please create a .env file.");
 }
 const ai = new GoogleGenAI({ apiKey });
 
-// FIX: Added chat instance and functions for the chatbot feature.
+
 // This creates a persistent, stateful chat session.
 let chat: Chat | null = null;
 
