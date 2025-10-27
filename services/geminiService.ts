@@ -18,7 +18,7 @@ export const generateItinerary = async (params: ItineraryParams): Promise<string
   - Interests: ${params.interests.join(', ')}
   - Budget: ${params.budget}
   
-  Provide a day-by-day plan. For each day, suggest activities and places to visit that align with the user's interests.
+  Provide a day-by-day plan. write in bulleted form whever necessary and make it attractive for user to read. For each day, suggest activities and places to visit that align with the user's interests.
   Be descriptive and engaging. Format the output as markdown, with each day starting with '**Day X: [Title]**'.`;
 
   try {

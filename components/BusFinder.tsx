@@ -6,12 +6,15 @@ const BusFinder: React.FC = () => {
   const [toCity, setToCity] = useState('');
   const [error, setError] = useState('');
 
-  const handleSwap = () => {
-    setFromCity(toCity);
-    setToCity(fromCity);
+  const formatDateForRedbus = (date: Date): string => {
+    const day = date.getDate();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFindBuses = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fromCity || !toCity) {
       setError('Please select both departure and destination cities.');
@@ -23,64 +26,62 @@ const BusFinder: React.FC = () => {
     }
     setError('');
 
-    // Format cities for the URL (lowercase, spaces to hyphens)
-    const formattedFrom = fromCity.toLowerCase().replace(/\s+/g, '-');
-    const formattedTo = toCity.toLowerCase().replace(/\s+/g, '-');
-    
-    // Use the new, more reliable path-based URL structure
-    const redbusUrl = `https://www.redbus.in/bus-tickets/${formattedFrom}-to-${formattedTo}`;
+    const formattedFromCity = fromCity.toLowerCase().replace(/\s+/g, '-');
+    const formattedToCity = toCity.toLowerCase().replace(/\s+/g, '-');
+    const travelDate = formatDateForRedbus(new Date()); // Use today's date
 
-    window.open(redbusUrl, '_blank', 'noopener,noreferrer');
+    // This is the new, more robust URL format
+    const redbusUrl = `https://www.redbus.in/bus-tickets/${formattedFromCity}-to-${formattedToCity}?onward=${travelDate}`;
+    
+    window.open(redbusUrl, '_blank');
   };
 
   return (
-    <section id="bus-finder" className="py-20 bg-brand-primary">
+    <section id="bus-finder" className="py-20 bg-brand-dark">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-serif text-brand-light font-bold">Find Your Bus</h2>
+          <h2 className="text-4xl md:text-5xl font-serif text-brand-secondary font-bold">Find Your Bus</h2>
           <p className="text-lg text-brand-accent/80 mt-2">Travel between cities in Chhattisgarh with ease.</p>
         </div>
-        <div className="max-w-3xl mx-auto bg-brand-primary/30 p-8 rounded-lg shadow-2xl">
-          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-center gap-4">
-            <div className="w-full md:w-2/5">
-              <label htmlFor="fromCity" className="block text-brand-light font-semibold mb-2 text-sm">From</label>
+        <div className="max-w-4xl mx-auto bg-brand-primary/30 p-8 rounded-lg shadow-2xl">
+          <form onSubmit={handleFindBuses} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            {/* From City */}
+            <div className="flex flex-col">
+              <label htmlFor="from-city" className="text-brand-light font-semibold mb-2">From</label>
               <select
-                id="fromCity"
+                id="from-city"
                 value={fromCity}
-                onChange={(e) => setFromCity(e.target.value)}
-                className="w-full p-3 bg-brand-dark/50 border-2 border-brand-primary rounded-lg focus:ring-2 focus:ring-brand-secondary focus:outline-none transition-all duration-300 text-brand-accent"
+                onChange={e => setFromCity(e.target.value)}
+                className="p-4 bg-brand-dark/50 border-2 border-brand-primary rounded-lg focus:ring-2 focus:ring-brand-secondary focus:outline-none transition-all duration-300 text-brand-accent"
               >
-                <option value="">Select Departure</option>
-                {CHHATTISGARH_CITIES.sort().map(city => <option key={city} value={city}>{city}</option>)}
+                <option value="" disabled>Select Departure City</option>
+                {CHHATTISGARH_CITIES.sort().map(city => <option key={`from-${city}`} value={city}>{city}</option>)}
               </select>
             </div>
 
-            <div className="self-center mt-4 md:mt-8">
-                <button type="button" onClick={handleSwap} className="p-2 rounded-full bg-brand-secondary/80 text-brand-dark hover:bg-brand-secondary transition-transform duration-300 hover:rotate-180">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                </button>
-            </div>
-            
-            <div className="w-full md:w-2/5">
-              <label htmlFor="toCity" className="block text-brand-light font-semibold mb-2 text-sm">To</label>
+            {/* To City */}
+            <div className="flex flex-col">
+              <label htmlFor="to-city" className="text-brand-light font-semibold mb-2">To</label>
               <select
-                id="toCity"
+                id="to-city"
                 value={toCity}
-                onChange={(e) => setToCity(e.target.value)}
-                className="w-full p-3 bg-brand-dark/50 border-2 border-brand-primary rounded-lg focus:ring-2 focus:ring-brand-secondary focus:outline-none transition-all duration-300 text-brand-accent"
+                onChange={e => setToCity(e.target.value)}
+                className="p-4 bg-brand-dark/50 border-2 border-brand-primary rounded-lg focus:ring-2 focus:ring-brand-secondary focus:outline-none transition-all duration-300 text-brand-accent"
               >
-                <option value="">Select Destination</option>
-                {CHHATTISGARH_CITIES.sort().map(city => <option key={city} value={city}>{city}</option>)}
+                <option value="" disabled>Select Destination City</option>
+                {CHHATTISGARH_CITIES.sort().map(city => <option key={`to-${city}`} value={city}>{city}</option>)}
               </select>
             </div>
-            
-            <div className="w-full md:w-auto mt-4 md:mt-8">
-                <button type="submit" className="w-full md:w-auto bg-brand-secondary text-brand-dark font-bold py-3 px-6 rounded-lg hover:bg-brand-light hover:shadow-lg hover:shadow-brand-secondary/40 transition-all duration-300 transform hover:scale-105">
-                    Find
-                </button>
-            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full bg-brand-secondary text-brand-dark font-bold py-4 px-8 rounded-lg hover:bg-brand-light hover:shadow-lg hover:shadow-brand-secondary/40 transition-all duration-300 transform hover:scale-105"
+            >
+              Find Buses
+            </button>
           </form>
-          {error && <p className="text-red-400 text-center mt-4 text-sm">{error}</p>}
+          {error && <p className="text-red-400 text-center mt-4">{error}</p>}
         </div>
       </div>
     </section>
