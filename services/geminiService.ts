@@ -1,110 +1,87 @@
-// This file centralizes all interactions with the Google Gemini API.
-import { GoogleGenAI, Chat } from "@google/genai";
+import { GoogleGenAI } from '@google/genai';
 import type { ItineraryParams } from '../types';
 
-// CRITICAL FIX: Use Vite's method for accessing environment variables on the frontend.
-const apiKey = import.meta.env.VITE_API_KEY;
-if (!apiKey) {
-  throw new Error("VITE_API_KEY environment variable not set. Please create a .env file.");
-}
-const ai = new GoogleGenAI({ apiKey });
-
-
-// This creates a persistent, stateful chat session.
-let chat: Chat | null = null;
-
-const initializeChat = () => {
-  if (!chat) {
-      chat = ai.chats.create({
-          model: 'gemini-2.5-flash',
-          config: {
-              systemInstruction: `You are a friendly and helpful tour guide for Chhattisgarh, India. 
-              Your goal is to assist tourists. Answer questions about destinations, culture, food, travel, and local tips. 
-              Keep your answers concise and engaging for a mobile chat interface.`,
-          },
-      });
-  }
-  return chat;
-};
-
-/**
-* Sends a message to the chatbot and returns the response.
-*/
-export const sendMessageToChatbot = async (message: string): Promise<string> => {
-  const chatSession = initializeChat();
-  try {
-      const result = await chatSession.sendMessage({ message });
-      return result.text;
-  } catch (error) {
-      console.error("Error sending message to chatbot:", error);
-      // Reset chat on error in case session is bad
-      chat = null;
-      throw new Error("Failed to get response from chatbot. The AI service may be temporarily unavailable.");
-  }
-};
+// FIX: Initialize GoogleGenAI with a named apiKey parameter as per the guidelines.
+// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
  * Generates a travel itinerary based on user preferences.
  */
 export const generateItinerary = async (params: ItineraryParams): Promise<string> => {
   const { days, interests, budget } = params;
-  const prompt = `Create a detailed, day-by-day travel itinerary for a ${days}-day trip to Chhattisgarh, India.
-  The traveler is interested in: ${interests.join(', ')}.
-  Their budget is ${budget}.
-  For each day, suggest activities, places to visit, and potential food experiences.
-  Format the output as clean markdown, with "##" for day titles (e.g., "## Day 1: Arrival in Raipur") and "###" for main activities. Use bullet points for details.
-  Make it sound exciting and welcoming for a tourist.`;
+  const prompt = `Create a ${days}-day travel itinerary for Chhattisgarh, India.
+Focus on these interests: ${interests.join(', ')}.
+The budget is ${budget}.
+Provide a detailed day-by-day plan. Format the output as clean markdown.`;
 
   try {
+    // FIX: Use ai.models.generateContent as per the guidelines.
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
+        model: 'gemini-2.5-flash',
+        contents: prompt,
     });
+    // FIX: Access the response text directly from the .text property.
     return response.text;
   } catch (error) {
-    console.error("Error generating itinerary:", error);
-    throw new Error("Failed to generate itinerary. The AI service may be temporarily unavailable.");
+    console.error('Error generating itinerary:', error);
+    throw new Error('Failed to generate itinerary. Please try again.');
   }
 };
 
 /**
- * Generates a short, local folktale from Chhattisgarh.
+ * Sends a message to the chatbot and gets a response.
  */
-export const generateFolklore = async (): Promise<string> => {
-    const prompt = `Tell me a short, captivating local legend or folktale from the tribal regions of Chhattisgarh, India.
-    The story should be suitable for a tourist audience.
-    Format the response as clean markdown, with a "###" for the story's title.`;
-  
+export const sendMessageToChatbot = async (message: string): Promise<string> => {
+    const prompt = `A user has sent the following message: "${message}". Provide a concise and helpful response.`;
+    
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-      return response.text;
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                systemInstruction: "You are a friendly and knowledgeable tour guide for Chhattisgarh, India. Keep your answers concise and relevant to tourism in the region."
+            }
+        });
+        return response.text;
     } catch (error) {
-      console.error("Error generating folklore:", error);
-      throw new Error("Failed to generate folklore. The AI service may be temporarily unavailable.");
+        console.error('Error sending message to chatbot:', error);
+        throw new Error('Failed to get a response from the chatbot.');
     }
 };
 
 /**
- * Generates a detailed description for a specific tribal cultural item.
+ * Generates a short, local folklore story from Chhattisgarh.
  */
-export const getTribalDetail = async (itemName: string): Promise<string> => {
-  const prompt = `You are a cultural expert for a tourism app.
-  In a brief and engaging manner (2-3 paragraphs), explain "${itemName}" of Chhattisgarh, India.
-  Describe what it is, its cultural significance, and what makes it unique.
-  Make it interesting for a tourist who knows nothing about it.
-  Format the response as clean markdown. Do not include a title.`;
+export const generateFolklore = async (): Promise<string> => {
+    const prompt = `Tell me a short, engaging, and lesser-known folklore story or legend from the tribal regions of Chhattisgarh, India. The story should be suitable for a general audience. Start the story with a title formatted like '### Title'.`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-    return response.text;
-  } catch (error) {
-    console.error(`Error generating details for ${itemName}:`, error);
-    throw new Error(`Failed to get details for ${itemName}.`);
-  }
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt
+        });
+        return response.text;
+    } catch (error) {
+        console.error('Error generating folklore:', error);
+        throw new Error('Failed to generate a folklore story.');
+    }
+};
+
+/**
+ * Gets detailed information about a tribal item.
+ */
+export const getTribalDetail = async (topic: string): Promise<string> => {
+    const prompt = `Provide a detailed and interesting overview of "${topic}" from Chhattisgarh, India. Cover its cultural significance, the process of making it (if applicable), and its relevance today. Format the response as a few paragraphs of markdown text. Use markdown for bolding key terms.`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt
+        });
+        return response.text;
+    } catch (error) {
+        console.error(`Error getting details for ${topic}:`, error);
+        throw new Error(`Failed to get details for ${topic}.`);
+    }
 };
