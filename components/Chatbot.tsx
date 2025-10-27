@@ -1,123 +1,104 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, Chat } from "@google/genai";
+import React, { useState, useRef, useEffect } from 'react';
 import type { ChatMessage } from '../types';
+import { sendMessageToChatbot } from '../services/geminiService';
 
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { sender: 'bot', text: "Hi! I'm your Chhattisgarh tour guide. How can I help you plan your trip today?" }
+  ]);
+  const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const chatRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(scrollToBottom, [messages]);
-
   useEffect(() => {
-    if (isOpen && !chatRef.current) {
-      try {
-        const apiKey = import.meta.env.VITE_API_KEY;
-        if (!apiKey) {
-           setMessages([{ sender: 'bot', text: "Sorry, the API key is not configured. Please contact the administrator." }]);
-           return;
-        }
-        const ai = new GoogleGenAI({ apiKey });
-        chatRef.current = ai.chats.create({
-          model: 'gemini-2.5-flash',
-          config: {
-            systemInstruction: 'You are a friendly and enthusiastic tour guide for Chhattisgarh, India. Keep your answers concise, helpful, and focused on tourism in the region. If asked about something unrelated to Chhattisgarh, politely steer the conversation back to tourism. Start the conversation by introducing yourself and asking how you can help.',
-          },
-        });
-        // Start the conversation
-        const startConversation = async () => {
-            setIsLoading(true);
-            const response = await chatRef.current!.sendMessage({ message: "Hello!" });
-            setMessages([{ sender: 'bot', text: response.text }]);
-            setIsLoading(false);
-        };
-        startConversation();
+    scrollToBottom();
+  }, [messages]);
 
-      } catch (error) {
-        console.error("Failed to initialize chatbot:", error);
-        setMessages([{ sender: 'bot', text: "Sorry, I'm having trouble connecting right now." }]);
-      }
-    }
-  }, [isOpen]);
-  
-  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !chatRef.current) return;
-    
-    const userMessage: ChatMessage = { sender: 'user', text: input };
+    if (!userInput.trim()) return;
+
+    const userMessage: ChatMessage = { sender: 'user', text: userInput };
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setUserInput('');
     setIsLoading(true);
 
     try {
-      const response = await chatRef.current.sendMessage({ message: input });
-      const botMessage: ChatMessage = { sender: 'bot', text: response.text };
+      const botResponse = await sendMessageToChatbot(userInput);
+      const botMessage: ChatMessage = { sender: 'bot', text: botResponse };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error("Chatbot error:", error);
-      const errorMessage: ChatMessage = { sender: 'bot', text: "I'm sorry, I encountered an error. Please try again." };
+      const errorMessage: ChatMessage = { sender: 'bot', text: "Sorry, I'm having a little trouble right now. Please try again later." };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading]);
+  };
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 z-50 w-16 h-16 bg-brand-secondary rounded-full shadow-lg flex items-center justify-center text-brand-dark transform hover:scale-110 transition-transform duration-300"
-        aria-label="Toggle Chatbot"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-      </button>
+      <div className="fixed bottom-6 right-6 z-30">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="bg-brand-secondary text-brand-dark rounded-full p-4 shadow-lg hover:bg-brand-light transform transition-all duration-300 hover:scale-110"
+          aria-label={isOpen ? "Close chat" : "Open chat"}
+        >
+          {isOpen ? (
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          )}
+        </button>
+      </div>
 
-      <div className={`fixed bottom-28 right-8 z-50 w-full max-w-sm h-[60vh] bg-brand-primary/80 backdrop-blur-md rounded-lg shadow-2xl flex flex-col transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
-        <div className="p-4 bg-brand-primary text-center">
-          <h3 className="font-bold text-brand-light">Chhattisgarh Travel Bot</h3>
+      <div
+        className={`fixed bottom-24 right-6 z-30 w-full max-w-sm h-[60vh] bg-brand-primary/80 backdrop-blur-md rounded-xl shadow-2xl flex flex-col transition-all duration-500 ease-in-out ${
+          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+      >
+        <div className="p-4 bg-brand-primary rounded-t-xl">
+          <h3 className="text-lg font-bold text-brand-light text-center">Your Chhattisgarh Guide</h3>
         </div>
         
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-brand-secondary/50 scrollbar-track-brand-primary/50">
           {messages.map((msg, index) => (
-            <div key={index} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs md:max-w-sm rounded-lg px-4 py-2 ${msg.sender === 'user' ? 'bg-brand-secondary text-brand-dark' : 'bg-brand-dark/50 text-brand-accent'}`}>
-                <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br />') }} />
+            <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] p-3 rounded-lg ${msg.sender === 'user' ? 'bg-brand-secondary text-brand-dark' : 'bg-brand-dark/50 text-brand-accent'}`}>
+                <p className="text-sm">{msg.text}</p>
               </div>
             </div>
           ))}
-          {isLoading && messages.length > 0 && (
-             <div className="flex items-end gap-2 justify-start">
-                <div className="max-w-xs md:max-w-sm rounded-lg px-4 py-2 bg-brand-dark/50 text-brand-accent">
-                    <div className="flex items-center space-x-1">
-                        <span className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse [animation-delay:-0.3s]"></span>
-                        <span className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse [animation-delay:-0.15s]"></span>
-                        <span className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse"></span>
-                    </div>
+          {isLoading && (
+            <div className="flex justify-start">
+               <div className="max-w-[80%] p-3 rounded-lg bg-brand-dark/50 text-brand-accent">
+                <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-brand-secondary rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                 </div>
+              </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
-        
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-brand-primary">
+
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-brand-primary/50">
           <div className="flex items-center bg-brand-dark/50 rounded-lg">
             <input
               type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
               placeholder="Ask about your trip..."
-              className="flex-1 bg-transparent p-3 text-brand-accent focus:outline-none"
+              className="flex-1 p-3 bg-transparent border-none focus:ring-0 focus:outline-none text-brand-accent placeholder-brand-accent/60"
               disabled={isLoading}
             />
-            <button type="submit" className="p-3 text-brand-secondary disabled:text-gray-500" disabled={isLoading || !input.trim()}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            <button type="submit" disabled={isLoading} className="p-3 text-brand-secondary hover:text-brand-light disabled:text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
           </div>
         </form>
